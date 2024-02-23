@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Shoyu Empire</title>
+        <link rel="stylesheet" href="index.css">
+        <script src="https://kit.fontawesome.com/4541982187.js" crossorigin="anonymous"></script>
+        <script src="index.js"></script>
+    </head>
+    <body>
+        <h1>Shoyu Empire</h1>
+        <div class="signin" id="signinbox">
+            <!-- Do not change anything in signin div-->
+            <div class="signinbox">
+                <div class="si-container">
+                    <div class="usr-in-div">
+                        <input type="text" id="username" required
+                            placeholder="Username"><br><br>
+                    </div>
+                    <div class="pwd-in-div">
+                        <input type="password" id="password" required
+                            placeholder="Password"><br><br>
+                        <button id="showhidepwd" class="show-hide"
+                            onclick="togglepwdvis()"><i class="fa-solid fa-eye"></i></button>
+                    </div>
+                    <button class="login-btn" onclick="checkPasswords()">Login</button>
+                    <p id="incorrect"></p>
+                </div>
+            </div>
+        </div>
+        <div class="mainpage" id="mainpage">
+
+            <!-- h2 = heading
+                p = basic paragraph text
+                h3 = smaller heading
+                items in <ul> with the tag <li> will show with a bullet point, shown as basic paragraph text
+            -->
+            <h2>Sample text</h2>
+            <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Labore, eum.</p>
+            <div class="sampleoptions">
+                <div id="samplecontainer">
+                    <h3>Stock:</h3>
+                    <ul>
+                        <li>PUPBG2 - 1359</li>
+                        <li>Space-Ships - fuuuuckkkkkkkk idk figure it out</li>
+                        <li>Primary-bases - 5</li>
+                    </ul>
+                </div>
+                <div id="samplecontainer">
+                    <h2>Empire List:</h2>
+                <p>
+                    <ul>
+                        <li><h3>Allies:</h3>
+                        <ul>
+                            <li>Pretzal Empire</li>
+                            <li>Potato Empire</li>
+                        </ul></li><li>
+                    <h3>Enimies:</h3>
+                        <ul>
+                            <li>Chicken Empire- Going to get nuked lol</li>
+                        </ul></li>
+                    <li><h3>Dead:</h3>
+                        <ul>  
+                            <li>Commie Commrads</li>
+                        </ul></li>
+                    </ul>
+                    </p>
+                </div>
+
+            </div>
+            <div class="samplesecure">
+                <div class="display">
+                    <p>Higher Clearance Needed!</p>
+                </div>
+                <div class="needsclearance">
+                    <p>Classified:</p>
+                    <ul>
+                        <li>The round bottle Members:</li>
+                        <li>Theo</li>
+                        <li>Lukas</li>
+                        <li>Retro</li>
+                        <li>--++--</li>
+                        <li>Unkown</li>
+                    </ul>
+                </div>
+            </div>
+            <button class="signout" onclick="signOut()">
+                Sign Out
+            </button>
+        </div>
+    </body>
+</html>
