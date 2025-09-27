@@ -1,3 +1,5 @@
+import time
+
 import sounddevice as sd
 import numpy as np
 
@@ -13,13 +15,13 @@ from tkinter import filedialog
 from scipy.fft import fft, fftfreq
 
 screen = Tk()
-screen.title("New spotify downloader")
+screen.title("wavebar")
 
 # --- Configuration ---
 # Set the sample rate. 44100 Hz is standard.
-SAMPLE_RATE = 96000
+SAMPLE_RATE = 92000 # 176400 92000
 # Duration of each audio buffer in seconds.
-DURATION = 0.09
+DURATION = 0.055
 
 def start():
     def get_blackhole_device_id():
@@ -41,10 +43,28 @@ def start():
     global intial
     intial = True
 
+    screen.update()
+
+    canvas = Canvas(screen, width=1512, height=870, bg='black')
+    canvas.pack()
+
+    wave = []
+
+    try:
+        size = int(sizeV.get())
+    except:
+        size = 10
+    global sizeO
+    sizeO = size
+
     def callback(indata, frames, time, status):
+        global sizeO
+
         """This function is called for each audio block."""
         if status:
             print(status, flush=True)
+
+        
         
         # Perform FFT on the audio data.
         # The audio data is a numpy array.
@@ -60,25 +80,48 @@ def start():
         print('magnatudes', yf)
 
         global intial
+        global nco
+        nco = 870
 
-        if intial == True:
-            global freqtest
-            freqtest = []
-            for i in range(0,85):
-                if i > 42:
-                    freqtest.append(ttk.Progressbar(screen,orient=VERTICAL, style='violet.Vertical.TProgressbar', length=600,mode="determinate",takefocus=True, maximum=1600))
-                    freqtest[i].grid(row=0,column=(85-(i)))
-                    freqtest[i]['value']= np.abs(yf[i])
+        try:
+            size = int(sizeV.get())
+        except:
+            size = 10
+
+        try:
+            for i in range(0,size):
+                wave.append(canvas.create_polygon(0,0,fill="#7f00e0", outline='#7f00e0', width=4))
+
+            for i in range(0, size+1):
+                nc = []
+                if i == 0:
+                    nc.append(0)
                 else:
-                    freqtest.append(ttk.Progressbar(screen,orient=VERTICAL, style='violet.Vertical.TProgressbar', length=600,mode="determinate",takefocus=True, maximum=1600))
-                    freqtest[i].grid(row=0,column=(85-(i-1)))
-                    freqtest[i]['value']= np.abs(yf[i])
-                    
-            intial = False
+                    nc.append((i*20-20)*((1512/size)/20))
+                
+                nc.append(870)
+                if i == 1:
+                    nc.append(0)
+                else:
+                    nc.append((i*20-20)*((1512/size)/20))
+                nc.append(nco)
+                
+                for j in range(20*i,20*i+20+1):
+                    nc.append(int((j-20)*((1512/size)/20)))
+                    nc.append(870-int(np.abs(yf[j])))
+                    nco = 870-int(np.abs(yf[j]))
+                    # print(nc , j, (j-20)*((1512/size)/20), (i*20-20)*((1512/size)/20), i*20*((1512/size)/20))
+                
+                nc.append(i*20*((1512/size)/20))
+                nc.append(870)
+                canvas.coords(wave[i-1], nc)
+        except:
+            pass
 
-        else:
-            for i in range(0,85):
-                freqtest[i]['value']= np.abs(yf[i])
+        if sizeO != size:
+            for i in range(0,len(wave)):
+                canvas.coords(wave[i], 0, 0)
+        sizeO = size
         
     # Start the audio stream.
     with sd.InputStream(
@@ -91,75 +134,26 @@ def start():
         
         print("Streaming started. Press Ctrl+C to stop.")
         while True:
-            sd.sleep(0) # Run for 10 seconds. Increase this for a longer period.
+            sd.sleep(0) #runs indefenitly
             screen.update()
         print("Streaming stopped.")
 
 #Setting Screen Size
 screen.geometry("740x740")
 
-# bg = PhotoImage(file='Tardis.png')
+# bp = PhotoImage(file='apfp.png')
 
-# bg_label = Label(screen, image=bg)
+# bg_label = Label(screen, image=bp)
 # bg_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-#setting up bars
-
-freq1S = ttk.Style()
-freq1S.theme_use('clam')
-freq1S.configure("violet.Vertical.TProgressbar", foreground='black', background='violet', highlightbackground = "black")
-# freq1 = ttk.Progressbar(screen,orient=VERTICAL, style='violet.Vertical.TProgressbar', length=600,mode="determinate",takefocus=True, maximum=1600)
-# freq1.grid(row=0,column=0)
-
-# freq2 = ttk.Progressbar(screen,orient=VERTICAL, style='violet.Vertical.TProgressbar', length=600,mode="determinate",takefocus=True, maximum=1600)
-# freq2.grid(row=0,column=1)
-
-# freq3 = ttk.Progressbar(screen,orient=VERTICAL, style='violet.Vertical.TProgressbar', length=600,mode="determinate",takefocus=True, maximum=1600)
-# freq3.grid(row=0,column=2)
-
-# freq4 = ttk.Progressbar(screen,orient=VERTICAL, style='violet.Vertical.TProgressbar', length=600,mode="determinate",takefocus=True, maximum=1600)
-# freq4.grid(row=0,column=3)
-
-# freq5 = ttk.Progressbar(screen,orient=VERTICAL, style='violet.Vertical.TProgressbar', length=600,mode="determinate",takefocus=True, maximum=1600)
-# freq5.grid(row=0,column=4)
-
-# freq6 = ttk.Progressbar(screen,orient=VERTICAL, style='violet.Vertical.TProgressbar', length=600,mode="determinate",takefocus=True, maximum=1600)
-# freq6.grid(row=0,column=5)
 
 startB = Button(text='start',command=start)
-startB.grid(row=1,column=43)
+startB.pack()
 
-# freq7 = ttk.Progressbar(screen,orient=VERTICAL, style='violet.Vertical.TProgressbar', length=600,mode="determinate",takefocus=True, maximum=1600)
-# freq7.grid(row=0,column=7)
+sizeV = StringVar()
+sizeE = Entry(textvariable=sizeV)
+sizeE.pack()
 
-# freq8 = ttk.Progressbar(screen,orient=VERTICAL, style='violet.Vertical.TProgressbar', length=600,mode="determinate",takefocus=True, maximum=1600)
-# freq8.grid(row=0,column=8)
-
-# freq9 = ttk.Progressbar(screen,orient=VERTICAL, style='violet.Vertical.TProgressbar', length=600,mode="determinate",takefocus=True, maximum=1600)
-# freq9.grid(row=0,column=9)
-
-# freq10 = ttk.Progressbar(screen,orient=VERTICAL, style='violet.Vertical.TProgressbar', length=600,mode="determinate",takefocus=True, maximum=1600)
-# freq10.grid(row=0,column=10)
-
-# freq11 = ttk.Progressbar(screen,orient=VERTICAL, style='violet.Vertical.TProgressbar', length=600,mode="determinate",takefocus=True, maximum=1600)
-# freq11.grid(row=0,column=11)
-
-# freq12 = ttk.Progressbar(screen,orient=VERTICAL, style='violet.Vertical.TProgressbar', length=600,mode="determinate",takefocus=True, maximum=1600)
-# freq12.grid(row=0,column=12)
-
-screen.grid_columnconfigure(0, weight=1) 
-screen.grid_columnconfigure(1, weight=1)   
-screen.grid_columnconfigure(2, weight=1)  
-screen.grid_columnconfigure(3, weight=1)  
-screen.grid_columnconfigure(4, weight=1)  
-screen.grid_columnconfigure(5, weight=1)  
-screen.grid_columnconfigure(6, weight=1)  
-screen.grid_columnconfigure(7, weight=1)  
-screen.grid_columnconfigure(8, weight=1)  
-screen.grid_columnconfigure(9, weight=1)  
-screen.grid_columnconfigure(10, weight=1)  
-screen.grid_columnconfigure(11, weight=1)  
-screen.grid_columnconfigure(12, weight=1)  
-screen.grid_rowconfigure(0, weight=1)  
+screen.grid_rowconfigure(0, weight=1)
 
 screen.mainloop()
