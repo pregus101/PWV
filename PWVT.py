@@ -19,9 +19,9 @@ screen.title("wavebar")
 
 # --- Configuration ---
 # Set the sample rate. 44100 Hz is standard.
-SAMPLE_RATE = 92000 # 176400 92000
+SAMPLE_RATE = 98000 # 176400 92000
 # Duration of each audio buffer in seconds.
-DURATION = 0.055
+DURATION = 0.09
 
 def start():
     def get_blackhole_device_id():
