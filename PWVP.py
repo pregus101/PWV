@@ -14,6 +14,8 @@ import pygame
 # Initialize Pygame
 pygame.init()
 
+clock = pygame.time.Clock()
+
 # Set up the display
 screen_width = 1512
 screen_height = 900
@@ -100,6 +102,7 @@ def callback(indata, frames, time, status):
         except:
             pass
     pygame.display.flip()
+    clock.tick(60)
 
 
 try:
