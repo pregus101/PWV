@@ -13,8 +13,41 @@ import time
 
 import pygame
 
+import subprocess
+
+def get_current_spotify_track():
+    script = """
+    tell application "Spotify"
+        if it is running then
+            if player state is playing then
+                set trackName to name of current track
+                set artistName to artist of current track
+                return trackName & " by " & artistName
+            else
+                return "Spotify is paused or stopped."
+            end if
+        else
+            return "Spotify is not running."
+        end if
+    end tell
+    """
+    try:
+        result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True, check=True)
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        return f"Error executing AppleScript: {e}"
+    except FileNotFoundError:
+        return "osascript command not found. macOS is required."
+
+if __name__ == "__main__":
+    current_track_info = get_current_spotify_track()
+    print(f"Currently playing on Spotify: {current_track_info}")
+
 # Initialize Pygame
 pygame.init()
+pygame.font.init() # Initialize the font module
+
+font = pygame.font.SysFont('Arial', 30)
 
 clock = pygame.time.Clock()
 
@@ -58,6 +91,12 @@ print(f"Starting to capture audio from device ID: {LOOPBACK_DEVICE_ID}")
 global times
 times = 0
 
+global get
+get = 0
+
+global gotton
+gotton = get_current_spotify_track()
+
 global trailer
 trailer = []
 
@@ -66,28 +105,27 @@ for i in range(1, size+1):
             trailer.append(870)
             print(j, len(trailer)+1)
 
+global mainb
+mainb = []
+
+for i in range(1, size+1):
+        for j in range(20*i-20,20*i+20+1):
+            mainb.append(870)
+            print(j, len(mainb)+1)
+
 # Define the callback function that will be called for each audio block
 def callback(indata, frames, time, status):
     global times
-    # if status:
-        # print(status)\
+    global get
+    global gotton
         
     yf = fft(indata[:, 0])
-    
-    # Process the audio data here
-    # `indata` is a NumPy array of shape (frames, channels)
-    # The data is raw audio data (e.g., amplitude values)
-    # print(f"Captured a block of audio data with shape: {indata.shape}")
-    # print(f"Sample data (first 10 frames): {indata[:10, 0]}") # Print first channel
-
-    nco = 870
 
     pygame.draw.rect(screen, (0,0,0), (0, 0, 1512, 900), 0) 
 
     for i in range(1, size+1):
 
         for j in range(20*i,20*i+20+1):
-            # nc.append((int((j-20)*((1512/size)/20)), 870-int(np.abs(yf[j]))))
 
             print(int((j-20)*((1512/size)/20))+2, (870-int(np.abs(yf[j]))), -(int((j-20)*((1512/size)/20))-int((j-20)*((1512/size)/20))-2), 870-(870-int(np.abs(yf[j]))), j, len(trailer))
 
@@ -98,10 +136,7 @@ def callback(indata, frames, time, status):
                 trailer[j] = (870-int(np.abs(yf[j])))
             else:
                 try:
-                    # if int(pygame.time.get_ticks()/(60*times)) >= 0.5:
-                    #     if trailer[j] < 870:
-                    #         trailer[j] += 1
-                    trailer[j] += 10
+                    trailer[j] += 8
                     pass
                 except:
                     pass
@@ -112,12 +147,26 @@ def callback(indata, frames, time, status):
             except:
                 pass
 
+    text = font.render(gotton, True, (122, 52, 235))
+    screen.blit(text, (50, 50))
+
+    try:
+        if pygame.time.get_ticks()/(60*times) >= 1:
+            global get
+            get += 1
+            if get == 120:
+                # global gotton
+                gotton = get_current_spotify_track()
+                get = 0
+    except:
+        print("fail")
+
     pygame.display.flip()
     try:
-        print(pygame.time.get_ticks(), int(pygame.time.get_ticks()/(60*times)))
+        print(pygame.time.get_ticks(), int(pygame.time.get_ticks()/(60*times)), get, times)
     except:
         print(pygame.time.get_ticks(), pygame.time.get_ticks()/60)
-    clock.tick(240)
+    clock.tick(1920)
     times += 1
 
 

@@ -66,28 +66,25 @@ for i in range(1, size+1):
             trailer.append(870)
             print(j, len(trailer)+1)
 
+global mainb
+mainb = []
+
+for i in range(1, size+1):
+        for j in range(20*i-20,20*i+20+1):
+            mainb.append(870)
+            print(j, len(mainb)+1)
+
 # Define the callback function that will be called for each audio block
 def callback(indata, frames, time, status):
     global times
-    # if status:
-        # print(status)\
         
     yf = fft(indata[:, 0])
-    
-    # Process the audio data here
-    # `indata` is a NumPy array of shape (frames, channels)
-    # The data is raw audio data (e.g., amplitude values)
-    # print(f"Captured a block of audio data with shape: {indata.shape}")
-    # print(f"Sample data (first 10 frames): {indata[:10, 0]}") # Print first channel
-
-    nco = 870
 
     pygame.draw.rect(screen, (0,0,0), (0, 0, 1512, 900), 0) 
 
     for i in range(1, size+1):
 
         for j in range(20*i,20*i+20+1):
-            # nc.append((int((j-20)*((1512/size)/20)), 870-int(np.abs(yf[j]))))
 
             print(int((j-20)*((1512/size)/20))+2, (870-int(np.abs(yf[j]))), -(int((j-20)*((1512/size)/20))-int((j-20)*((1512/size)/20))-2), 870-(870-int(np.abs(yf[j]))), j, len(trailer))
 
@@ -98,9 +95,6 @@ def callback(indata, frames, time, status):
                 trailer[j] = (870-int(np.abs(yf[j])))
             else:
                 try:
-                    # if int(pygame.time.get_ticks()/(60*times)) >= 0.5:
-                    #     if trailer[j] < 870:
-                    #         trailer[j] += 1
                     trailer[j] += 10
                     pass
                 except:
