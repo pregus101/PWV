@@ -36,7 +36,7 @@ def get_Wavebar_device_id():
     """Finds the device ID for Wavebar."""
     devices = sd.query_devices()
     for i, device in enumerate(devices):
-        if "Wavebar" in device['name']:
+        if "BlackHole" in device['name']:
             return i
     raise ValueError("Wavebar device not found. Did you install and set it up correctly?")
 
@@ -45,7 +45,7 @@ def get_Wavebar_device_id():
 # Run 'print(sd.query_devices())' to find the correct device.
 # For example, on Windows, it might be 'Stereo Mix' or 'Loopback'.
 LOOPBACK_DEVICE_ID = get_Wavebar_device_id()  # Change this to your actual device ID
-LOOPBACK_DEVICE_ID = 0
+
 
 CHANNELS = 2             # Number of audio channels (e.g., stereo)
 RATE = 96000             # Sample rate in Hz

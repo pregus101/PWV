@@ -69,7 +69,7 @@ def get_Wavebar_device_id():
     """Finds the device ID for Wavebar."""
     devices = sd.query_devices()
     for i, device in enumerate(devices):
-        if "Wavebar" in device['name']:
+        if "BlackHole" in device['name']:
             return i
     raise ValueError("Wavebar device not found. Did you install and set it up correctly?")
 
@@ -78,7 +78,6 @@ def get_Wavebar_device_id():
 # Run 'print(sd.query_devices())' to find the correct device.
 # For example, on Windows, it might be 'Stereo Mix' or 'Loopback'.
 LOOPBACK_DEVICE_ID = get_Wavebar_device_id()  # Change this to your actual device ID
-LOOPBACK_DEVICE_ID = 0
 
 CHANNELS = 2             # Number of audio channels (e.g., stereo)
 RATE = 96000             # Sample rate in Hz
@@ -91,6 +90,12 @@ print(f"Starting to capture audio from device ID: {LOOPBACK_DEVICE_ID}")
 global times
 times = 0
 
+global wait1
+wait1 = []
+
+global wait2
+wait2 = []
+
 global get
 get = 0
 
@@ -102,8 +107,10 @@ trailer = []
 
 for i in range(1, size+1):
         for j in range(20*i-20,20*i+20+1):
-            trailer.append(870)
+            trailer.append(830)
             print(j, len(trailer)+1)
+            wait1.append(120)
+            wait2.append(0)
 
 global mainb
 mainb = []
@@ -118,6 +125,9 @@ def callback(indata, frames, time, status):
     global times
     global get
     global gotton
+    global wait1
+    global wait2
+
         
     yf = fft(indata[:, 0])
 
@@ -134,16 +144,34 @@ def callback(indata, frames, time, status):
             print(trailer[j])
             if  (870-int(np.abs(yf[j]))) <= trailer[j]:
                 trailer[j] = (870-int(np.abs(yf[j])))
+                wait1[j] = 0
+                wait2[j] = 0
             else:
                 try:
-                    trailer[j] += 8
+                    print(wait1[j])
+                    if pygame.time.get_ticks()/(60*times) >= 1:
+                        if wait1[j] < 10:
+                            wait1[j] += 1
+                            pygame.draw.rect(screen, (122, 255, 235), (int((j-20)*((1512/size)/20))+2, 870-(870-trailer[j])-1, -(int((j-20)*((1512/size)/20))-int((j-20)*((1512/size)/20))-2), 2))
+                            print(((870-trailer[j])-1, 2))
+                        else:
+                            if trailer[j] < 830:
+                                if wait1[j] < 110: 
+                                    trailer[j] += 2
+                                    wait1[j] += 1
+                                    pygame.draw.rect(screen, (122, 255, 235), (int((j-20)*((1512/size)/20))+2, 870-(870-trailer[j])-1, -(int((j-20)*((1512/size)/20))-int((j-20)*((1512/size)/20))-2), 2))
+                                    print(((870-trailer[j])-1, 2))
+                                else:
+                                    trailer[j] = 830
+                            else:
+                                trailer[j] = 830
+                                pass
                     pass
                 except:
                     pass
                 pass
             try:
-                pygame.draw.rect(screen, (122, 255, 235), (int((j-20)*((1512/size)/20))+2, 870-(870-trailer[j])-1, -(int((j-20)*((1512/size)/20))-int((j-20)*((1512/size)/20))-2), 2))
-                print(((870-trailer[j])-1, 2))
+                pass
             except:
                 pass
 
@@ -179,6 +207,7 @@ try:
         callback=callback
     ):
         print("\nCapturing... Press Ctrl+C to stop.")
-        sd.sleep(999999)  # Keep the stream open indefinitely
+        while True:
+            sd.sleep(999999)  # Keep the stream open indefinitely
 except Exception as e:
     print(f"\nError: {e}")
