@@ -190,7 +190,7 @@ def callback(indata, frames, time, status):
         print(pygame.time.get_ticks(), pygame.time.get_ticks()/60)
     clock.tick(1920)
     times += 1
-
+ 
 
 try:
     with sd.InputStream(

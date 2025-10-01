@@ -15,6 +15,87 @@ import pygame
 
 import subprocess
 
+import urllib.request
+from urllib.parse import urlparse, parse_qs
+
+from youtubesearchpython import VideosSearch
+
+import os
+
+from PIL import Image
+
+def get_youtube_id(url, ignore_playlist=True):
+    print(url)
+    if 'youtu.be' in url:
+        path = urlparse(url).path
+        return path.lstrip('/')
+    elif 'youtube.com' in url:
+        query = urlparse(url).query
+        print(query)
+        if query:
+            query_params = parse_qs(query)
+            if 'v' in query_params:
+                video_id = query_params['v'][0]
+                if ignore_playlist and '&list=' in url:
+                    # Strip any playlist parameters
+                    return video_id.split('&')[0]
+                return video_id
+    return None
+
+def search(term):
+    searcher = VideosSearch(term, 1)
+    result = searcher.result()
+
+    video = []
+    for video_data in result['result']:
+        video.append(video_data['link'])
+    return video
+
+global Song
+Song = ''
+
+def get_song_image():
+    global Song
+    global gotton
+    if Song != gotton:
+        video_id = get_youtube_id(search(gotton)[0])
+        # video_id = video_id[2:]
+        # print(video_id)
+        try:
+            thumbnail_url = f'https://img.youtube.com/vi/{video_id}/maxresdefault.jpg'
+            print(thumbnail_url)
+        except:
+            print("faila")
+        try:
+            # print(os.getcwd())
+
+            image_out = str(os.getcwd()) + "/temp.jpg"
+
+            print(image_out)
+
+            urllib.request.urlretrieve(thumbnail_url, image_out)
+        except:
+            print("failb")
+            # print(os.getcwd())
+
+        try:
+            image = Image.open(image_out)
+
+            # Define new dimensions (width, height)
+            new_size = (1512, 900)
+
+            # Resize the image
+            resized_image = image.resize(new_size)
+
+            # Save the resized image
+            resized_image.save(image_out)
+        except:
+            print("failc")
+        Song = gotton
+    else:
+        print("skip")
+    
+
 def get_current_spotify_track():
     script = """
     tell application "Spotify"
@@ -108,7 +189,7 @@ trailer = []
 for i in range(1, size+1):
         for j in range(20*i-20,20*i+20+1):
             trailer.append(830)
-            print(j, len(trailer)+1)
+            # print(j, len(trailer)+1)
             wait1.append(120)
             wait2.append(0)
 
@@ -118,7 +199,7 @@ mainb = []
 for i in range(1, size+1):
         for j in range(20*i-20,20*i+20+1):
             mainb.append(870)
-            print(j, len(mainb)+1)
+            # print(j, len(mainb)+1)
 
 # Define the callback function that will be called for each audio block
 def callback(indata, frames, time, status):
@@ -131,36 +212,38 @@ def callback(indata, frames, time, status):
         
     yf = fft(indata[:, 0])
 
-    pygame.draw.rect(screen, (0,0,0), (0, 0, 1512, 900), 0) 
+    # pygame.draw.rect(screen, (0,0,0), (0, 0, 1512, 900), 0) 
+    image = pygame.image.load(os.getcwd()+"/temp.jpg").convert_alpha()
+    screen.blit(image, [(0,0),(1512, 900)])
 
     for i in range(1, size+1):
 
         for j in range(20*i,20*i+20+1):
 
-            print(int((j-20)*((1512/size)/20))+2, (870-int(np.abs(yf[j]))), -(int((j-20)*((1512/size)/20))-int((j-20)*((1512/size)/20))-2), 870-(870-int(np.abs(yf[j]))), j, len(trailer))
+            # print(int((j-20)*((1512/size)/20))+2, (870-int(np.abs(yf[j]))), -(int((j-20)*((1512/size)/20))-int((j-20)*((1512/size)/20))-2), 870-(870-int(np.abs(yf[j]))), j, len(trailer))
 
             pygame.draw.rect(screen, (122, 52, 235), (int((j-20)*((1512/size)/20))+2, (870-int(np.abs(yf[j]))), -(int((j-20)*((1512/size)/20))-int((j-20)*((1512/size)/20))-2), 870-(870-int(np.abs(yf[j])))))
             
-            print(trailer[j])
+            # print(trailer[j])
             if  (870-int(np.abs(yf[j]))) <= trailer[j]:
                 trailer[j] = (870-int(np.abs(yf[j])))
                 wait1[j] = 0
                 wait2[j] = 0
             else:
                 try:
-                    print(wait1[j])
+                    # print(wait1[j])
                     if pygame.time.get_ticks()/(60*times) >= 1:
                         if wait1[j] < 10:
                             wait1[j] += 1
                             pygame.draw.rect(screen, (122, 255, 235), (int((j-20)*((1512/size)/20))+2, 870-(870-trailer[j])-1, -(int((j-20)*((1512/size)/20))-int((j-20)*((1512/size)/20))-2), 2))
-                            print(((870-trailer[j])-1, 2))
+                            # print(((870-trailer[j])-1, 2))
                         else:
                             if trailer[j] < 830:
                                 if wait1[j] < 110: 
                                     trailer[j] += 2
                                     wait1[j] += 1
                                     pygame.draw.rect(screen, (122, 255, 235), (int((j-20)*((1512/size)/20))+2, 870-(870-trailer[j])-1, -(int((j-20)*((1512/size)/20))-int((j-20)*((1512/size)/20))-2), 2))
-                                    print(((870-trailer[j])-1, 2))
+                                    # print(((870-trailer[j])-1, 2))
                                 else:
                                     trailer[j] = 830
                             else:
@@ -186,14 +269,15 @@ def callback(indata, frames, time, status):
                 # global gotton
                 gotton = get_current_spotify_track()
                 get = 0
+                get_song_image()
     except:
         print("fail")
 
     pygame.display.flip()
-    try:
-        print(pygame.time.get_ticks(), int(pygame.time.get_ticks()/(60*times)), get, times)
-    except:
-        print(pygame.time.get_ticks(), pygame.time.get_ticks()/60)
+    # try:
+    #     print(pygame.time.get_ticks(), int(pygame.time.get_ticks()/(60*times)), get, times)
+    # except:
+    #     print(pygame.time.get_ticks(), pygame.time.get_ticks()/60)
     clock.tick(1920)
     times += 1
 
