@@ -57,6 +57,8 @@ Song = ''
 def get_song_image():
     global Song
     global gotton
+    image_out = str(os.getcwd()) + "/temp.jpg"
+
     if Song != gotton:
         video_id = get_youtube_id(search(gotton)[0])
         # video_id = video_id[2:]
@@ -66,12 +68,7 @@ def get_song_image():
             print(thumbnail_url)
         except:
             print("faila")
-        try:
-            # print(os.getcwd())
-
-            image_out = str(os.getcwd()) + "/temp.jpg"
-
-            print(image_out)
+        try: 
 
             urllib.request.urlretrieve(thumbnail_url, image_out)
         except:
@@ -79,6 +76,7 @@ def get_song_image():
             # print(os.getcwd())
 
         try:
+
             image = Image.open(image_out)
 
             # Define new dimensions (width, height)
@@ -92,8 +90,21 @@ def get_song_image():
         except:
             print("failc")
         Song = gotton
-    else:
-        print("skip")
+    # else:
+    #     print("skip")
+
+def get_avg_img_col():
+    image = Image.open(str(os.getcwd()) + "/temp.jpg")
+    image_array = np.array(image)
+
+    average_color_per_channel = np.average(image_array, axis=(0, 1))
+    
+    # Convert to integer values
+    average_color = tuple(map(int, average_color_per_channel))
+
+    neg_average_color = (255-average_color[0], 255-average_color[1], 255-average_color[2])
+
+    return(neg_average_color)
     
 
 def get_current_spotify_track():
@@ -180,6 +191,9 @@ wait2 = []
 global get
 get = 0
 
+global color
+color = get_avg_img_col()
+
 global gotton
 gotton = get_current_spotify_track()
 
@@ -208,6 +222,7 @@ def callback(indata, frames, time, status):
     global gotton
     global wait1
     global wait2
+    global color
 
         
     yf = fft(indata[:, 0])
@@ -222,7 +237,7 @@ def callback(indata, frames, time, status):
 
             # print(int((j-20)*((1512/size)/20))+2, (870-int(np.abs(yf[j]))), -(int((j-20)*((1512/size)/20))-int((j-20)*((1512/size)/20))-2), 870-(870-int(np.abs(yf[j]))), j, len(trailer))
 
-            pygame.draw.rect(screen, (122, 52, 235), (int((j-20)*((1512/size)/20))+2, (870-int(np.abs(yf[j]))), -(int((j-20)*((1512/size)/20))-int((j-20)*((1512/size)/20))-2), 870-(870-int(np.abs(yf[j])))))
+            pygame.draw.rect(screen, color, (int((j-20)*((1512/size)/20))+2, (870-int(np.abs(yf[j]))), -(int((j-20)*((1512/size)/20))-int((j-20)*((1512/size)/20))-2), 870-(870-int(np.abs(yf[j])))))
             
             # print(trailer[j])
             if  (870-int(np.abs(yf[j]))) <= trailer[j]:
@@ -258,7 +273,7 @@ def callback(indata, frames, time, status):
             except:
                 pass
 
-    text = font.render(gotton, True, (122, 52, 235))
+    text = font.render(gotton, True, color)
     screen.blit(text, (50, 50))
 
     try:
@@ -269,9 +284,11 @@ def callback(indata, frames, time, status):
                 # global gotton
                 gotton = get_current_spotify_track()
                 get = 0
-                get_song_image()
+                color = get_avg_img_col()
     except:
         print("fail")
+
+    get_song_image()
 
     pygame.display.flip()
     # try:
