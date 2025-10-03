@@ -57,18 +57,28 @@ def search(term):
     return video
 
 # Global variables for shared state
-global Song, gotton, color, mainb, trailer, wait1, wait2, size, times
+global Song, gotton, color, mainb, trailer, wait1, wait2, size, times, sizeOld
 Song = ''
 gotton = ''
 color = (0, 0, 0) # Default color
 times = 0
 size = 10
 
+
+sizeOld = [1512, 900]
+
 def get_song_image():
     # ... (content remains the same) ...
     global Song
     global gotton
+    global sizeOld
     image_out = str(os.getcwd()) + "/temp.jpg"
+
+    window_size = screen.get_size()
+    width = window_size[0]
+    height = window_size[1]
+
+    print(sizeOld)
 
     if Song != gotton and gotton not in ["Spotify is paused or stopped.", "Spotify is not running.", "Error executing AppleScript: 1:47: execution error: Application failed to initialize. (-10810)", "Spotify not playing."]:
         try:
@@ -88,16 +98,44 @@ def get_song_image():
 
                 try:
                     image = Image.open(image_out)
-                    new_size = (1512, 900)
+                    new_size = (width, height)
                     resized_image = image.resize(new_size)
                     resized_image.save(image_out)
                 except Exception as e:
                     print(f"Error resizing image: {e}")
-            
-            Song = gotton
         except Exception as e:
             print(f"Error during image fetch/resize: {e}")
             Song = gotton # Still mark as 'gotten' to avoid re-running immediately
+
+    if sizeOld != window_size:
+            try:
+                video_url = search(gotton)[0]
+                video_id = get_youtube_id(video_url)
+                print(f"Fetching image for: {gotton}")
+
+                if video_id:
+                    try:
+                        # Try high resolution first
+                        thumbnail_url = f'https://img.youtube.com/vi/{video_id}/maxresdefault.jpg'
+                        urllib.request.urlretrieve(thumbnail_url, image_out)
+                    except:
+                        # Fallback to default resolution
+                        thumbnail_url = f'https://img.youtube.com/vi/{video_id}/default.jpg'
+                        urllib.request.urlretrieve(thumbnail_url, image_out)
+
+                    try:
+                        image = Image.open(image_out)
+                        new_size = (width, height)
+                        resized_image = image.resize(new_size)
+                        resized_image.save(image_out)
+                    except Exception as e:
+                        print(f"Error resizing image: {e}")
+                
+                Song = gotton
+
+            except Exception as e:
+                print(f"Error during image fetch/resize: {e}")
+                Song = gotton # Still mark as 'gotten' to avoid re-running immediately
     # else:
     #     print("skip")
 
@@ -216,7 +254,7 @@ font = pygame.font.SysFont('Arial', 30)
 clock = pygame.time.Clock()
 screen_width = 1512
 screen_height = 900
-screen = pygame.display.set_mode((screen_width, screen_height))
+screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
 pygame.display.set_caption("Pygame Audio Visualizer")
 
 # Initialize global arrays for visualizer bars
@@ -238,16 +276,25 @@ for i in range(1, size+1):
 def song_update_task():
     global gotton
     global color
+    global sizeOld
+
+    window_size = screen.get_size()
+    width = window_size[0]
+    height = window_size[1]
     
     # Run initial setup
     new_track_info = get_current_spotify_track()
-    if new_track_info != gotton:
+    print("called")
+    if new_track_info != gotton  or sizeOld != window_size:
         gotton = new_track_info
         get_song_image()
         color = get_avg_img_col()
+        sizeOldOne = 900
     
     # Main loop for periodic updates
     while True:
+        window_size = screen.get_size()
+        print("called2?")
         try:
             new_track_info = get_current_spotify_track()
             
@@ -257,6 +304,15 @@ def song_update_task():
                 
                 get_song_image()
                 color = get_avg_img_col()
+
+            if sizeOldOne != window_size:
+                print("worked")
+                get_song_image()
+                color = get_avg_img_col()
+
+                print(sizeOldOne)
+                sizeOldOne = window_size
+                print(sizeOldOne)
             
         except Exception as e:
             print(f"Error in song update thread: {e}")
@@ -268,6 +324,10 @@ def song_update_task():
 def callback(indata, frames, time, status):
     global mainb
     global size
+
+    window_size = screen.get_size()
+    width = window_size[0]
+    height = window_size[1]
     
     yf = fft(indata[:, 0])
 
@@ -276,24 +336,31 @@ def callback(indata, frames, time, status):
         for i in range(1, size + 1):
             for j in range(20 * i, 20 * i + 20 + 1):
                 if bar_index < len(mainb):
-                    mainb[bar_index] = (870 - int(np.abs(yf[j])))
+                    mainb[bar_index] = (height - int(np.abs(yf[j])))
                 bar_index += 1
 
 # 3. Main Pygame Loop (handles drawing, events, and decay logic)
 def main_loop():
     global times
-    global gotton, color, mainb, trailer, wait1
+    global gotton, color, mainb, trailer, wait1, sizeOld
     
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
+        window_size = screen.get_size()
+        width = window_size[0]
+        height = window_size[1]
+
+        if sizeOld != window_size:
+            print(100)
         
         # --- DRAWING ---
         try:
             image = pygame.image.load(os.getcwd()+"/temp.jpg").convert_alpha()
-            screen.blit(image, [(0,0),(screen_width, screen_height)])
+            screen.blit(image, [(0,0),(width, height)])
         except pygame.error:
             screen.fill((0, 0, 0))
 
@@ -307,9 +374,9 @@ def main_loop():
                     bar_height_y = mainb[bar_index] 
                     trailer_height_y = trailer[bar_index]
 
-                    bar_x = int((j-20)*((screen_width/size)/20))+2
+                    bar_x = int((j-20)*((width/size)/20))+2
                     bar_w = 2 
-                    bar_h = 870 - bar_height_y
+                    bar_h = (height) - bar_height_y
 
                     # Draw the main bar
                     pygame.draw.rect(screen, color, (bar_x, bar_height_y, bar_w, bar_h))
@@ -323,15 +390,15 @@ def main_loop():
                             wait1[bar_index] += 1
                             pygame.draw.rect(screen, (122, 255, 235), (bar_x, trailer_height_y - 1, bar_w, 2))
                         else:
-                            if trailer_height_y < 830:
+                            if trailer_height_y < height-50:
                                 if wait1[bar_index] < 110: 
                                     trailer[bar_index] += 2
                                     wait1[bar_index] += 1
                                     pygame.draw.rect(screen, (122, 255, 235), (bar_x, trailer_height_y - 1, bar_w, 2))
                                 else:
-                                    trailer[bar_index] = 830
+                                    trailer[bar_index] = height-50
                             else:
-                                trailer[bar_index] = 830
+                                trailer[bar_index] = height-50
                     
                     bar_index += 1
         
@@ -343,6 +410,8 @@ def main_loop():
         pygame.display.flip()
         clock.tick(60)
         times += 1
+
+        sizeOld = window_size
         
     pygame.quit()
     print("Exiting application.")
