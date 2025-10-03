@@ -75,6 +75,9 @@ def get_song_image():
             print("failb")
             # print(os.getcwd())
 
+            thumbnail_url = f'https://img.youtube.com/vi/{video_id}/default.jpg'
+            urllib.request.urlretrieve(thumbnail_url, image_out)
+
         try:
 
             image = Image.open(image_out)
@@ -149,7 +152,7 @@ screen_height = 900
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Pygame Polygon Example")
 
-size = 10
+size = 10 # Max size 358
 
 for event in pygame.event.get():
     if event.type == pygame.QUIT:
@@ -246,12 +249,15 @@ def callback(indata, frames, time, status):
                 wait2[j] = 0
             else:
                 try:
-                    # print(wait1[j])
                     if pygame.time.get_ticks()/(60*times) >= 1:
                         if wait1[j] < 10:
                             wait1[j] += 1
                             pygame.draw.rect(screen, (122, 255, 235), (int((j-20)*((1512/size)/20))+2, 870-(870-trailer[j])-1, -(int((j-20)*((1512/size)/20))-int((j-20)*((1512/size)/20))-2), 2))
-                            # print(((870-trailer[j])-1, 2))
+
+
+                            # print(((870-trailer[j])-1, 2)) #used for dugbugging
+
+
                         else:
                             if trailer[j] < 830:
                                 if wait1[j] < 110: 

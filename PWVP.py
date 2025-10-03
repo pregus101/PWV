@@ -101,7 +101,7 @@ def callback(indata, frames, time, status):
         except:
             pass
     pygame.display.flip()
-    clock.tick(60)
+    clock.tick(1920)
 
 
 try:
