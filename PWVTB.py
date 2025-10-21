@@ -24,6 +24,20 @@ import os
 
 from PIL import Image
 
+import threading
+import platform
+import sys
+
+if platform.system() == "Windows":
+    deviceOS = "Windows"
+elif platform.system() == "Linux":
+    deviceOS = "Linux"
+else:
+    deviceOS = "Mac"
+
+# Initiales a lock for thread-safe data access
+data_lock = threading.Lock()
+
 def get_youtube_id(url, ignore_playlist=True):
     print(url)
     if 'youtu.be' in url:
@@ -57,44 +71,46 @@ Song = ''
 def get_song_image():
     global Song
     global gotton
-    image_out = str(os.getcwd()) + "/temp.jpg"
 
-    if Song != gotton:
-        video_id = get_youtube_id(search(gotton)[0])
-        # video_id = video_id[2:]
-        # print(video_id)
-        try:
-            thumbnail_url = f'https://img.youtube.com/vi/{video_id}/maxresdefault.jpg'
-            print(thumbnail_url)
-        except:
-            print("faila")
-        try: 
+    while True:
+        image_out = str(os.getcwd()) + "/temp.jpg"
 
-            urllib.request.urlretrieve(thumbnail_url, image_out)
-        except:
-            print("failb")
-            # print(os.getcwd())
+        if Song != gotton:
+            video_id = get_youtube_id(search(gotton)[0])
+            # video_id = video_id[2:]
+            # print(video_id)
+            try:
+                thumbnail_url = f'https://img.youtube.com/vi/{video_id}/maxresdefault.jpg'
+                print(thumbnail_url)
+            except:
+                print("faila")
+            try: 
 
-            thumbnail_url = f'https://img.youtube.com/vi/{video_id}/default.jpg'
-            urllib.request.urlretrieve(thumbnail_url, image_out)
+                urllib.request.urlretrieve(thumbnail_url, image_out)
+            except:
+                print("failb")
+                # print(os.getcwd())
 
-        try:
+                thumbnail_url = f'https://img.youtube.com/vi/{video_id}/default.jpg'
+                urllib.request.urlretrieve(thumbnail_url, image_out)
 
-            image = Image.open(image_out)
+            try:
 
-            # Define new dimensions (width, height)
-            new_size = (1512, 900)
+                image = Image.open(image_out)
 
-            # Resize the image
-            resized_image = image.resize(new_size)
+                # Define new dimensions (width, height)
+                new_size = (1512, 900)
 
-            # Save the resized image
-            resized_image.save(image_out)
-        except:
-            print("failc")
-        Song = gotton
-    # else:
-    #     print("skip")
+                # Resize the image
+                resized_image = image.resize(new_size)
+
+                # Save the resized image
+                resized_image.save(image_out)
+            except:
+                print("failc")
+            Song = gotton
+        # else:
+        #     print("skip")
 
 def get_avg_img_col():
     image = Image.open(str(os.getcwd()) + "/temp.jpg")
@@ -149,7 +165,7 @@ clock = pygame.time.Clock()
 # Set up the display
 screen_width = 1512
 screen_height = 900
-screen = pygame.display.set_mode((screen_width, screen_height))
+screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
 pygame.display.set_caption("Pygame Polygon Example")
 
 size = 10 # Max size 358
@@ -181,6 +197,8 @@ DURATION = 0.075
 # ----------------------
 
 print(f"Starting to capture audio from device ID: {LOOPBACK_DEVICE_ID}")
+
+
 
 global times
 times = 0
@@ -294,8 +312,6 @@ def callback(indata, frames, time, status):
     except:
         print("fail")
 
-    get_song_image()
-
     pygame.display.flip()
     # try:
     #     print(pygame.time.get_ticks(), int(pygame.time.get_ticks()/(60*times)), get, times)
@@ -304,17 +320,26 @@ def callback(indata, frames, time, status):
     clock.tick(1920)
     times += 1
 
+# Executing the threads.
 
-try:
-    with sd.InputStream(
-        device=LOOPBACK_DEVICE_ID,
-        samplerate=RATE,
-        channels=CHANNELS,
-        blocksize=int(RATE*DURATION),
-        callback=callback
-    ):
-        print("\nCapturing... Press Ctrl+C to stop.")
-        while True:
-            sd.sleep(999999)  # Keep the stream open indefinitely
-except Exception as e:
-    print(f"\nError: {e}")
+if __name__ == "__main__":
+
+    #Start the song/image updater threads
+    song_thread = threading.Thread(target=get_current_spotify_track, daemon=True)
+    song_thread.start()
+
+    image_thread = threading.Thread(target=get_song_image, daemon=True)
+    image_thread.start()
+
+    try:
+        with sd.InputStream(
+            device=LOOPBACK_DEVICE_ID,
+            samplerate=RATE,
+            channels=CHANNELS,
+            blocksize=int(RATE*DURATION),
+            callback=callback
+        ):
+            print("\nCapturing... Press Ctrl+C to stop.")
+
+    except Exception as e:
+        print(f"\nError: {e}")

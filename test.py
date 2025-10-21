@@ -284,7 +284,6 @@ def song_update_task():
     
     # Run initial setup
     new_track_info = get_current_spotify_track()
-    print("called")
     if new_track_info != gotton  or sizeOld != window_size:
         gotton = new_track_info
         get_song_image()
@@ -294,7 +293,6 @@ def song_update_task():
     # Main loop for periodic updates
     while True:
         window_size = screen.get_size()
-        print("called2?")
         try:
             new_track_info = get_current_spotify_track()
             
